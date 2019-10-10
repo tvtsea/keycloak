@@ -1,0 +1,25 @@
+{
+    "name": "ac-systems/keycloak-php-sdk",
+    "description": "PHP wrapper for the KeyCloak admin API",
+    "keywords": ["keycloak", "sdk", "admin", "identity server"],
+    "type": "library",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "WebDev",
+            "email": "web.support@ac-systems.com",
+            "homepage": "https://ac-systems.be"
+        }
+    ],
+    "require": {
+        "php": "^7.1",
+        "ext-json": "*",
+        "guzzlehttp/guzzle": "^5.3|^6.3",
+        "league/oauth2-client": "^2.4"
+    },
+    "autoload": {
+        "psr-4": {
+            "Keycloak\\": "src/"
+        }
+    }
+}
