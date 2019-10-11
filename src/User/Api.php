@@ -3,7 +3,10 @@ namespace Keycloak\User;
 
 use Keycloak\Exception\KeycloakException;
 use Keycloak\KeycloakClient;
+use Keycloak\User\Entity\NewUser;
+use Keycloak\User\Entity\Role;
 use Keycloak\User\Entity\User;
+use Psr\Http\Message\ResponseInterface;
 
 class Api
 {
@@ -24,6 +27,7 @@ class Api
     /**
      * @param string $id
      * @return User
+     * @throws KeycloakException
      */
     public function find(string $id): ?User
     {
@@ -44,6 +48,7 @@ class Api
      * @param array $query Can be used for more specific list searches.
      * @Link https://www.keycloak.org/docs-api/7.0/rest-api/index.html#_getusers
      * @return User[]
+     * @throws KeycloakException
      */
     public function findAll(array $query = []): array
     {
@@ -59,6 +64,7 @@ class Api
 
     /**
      * @return int
+     * @throws KeycloakException
      */
     public function count(): int
     {
@@ -66,5 +72,83 @@ class Api
             ->sendRequest('GET', 'users/count')
             ->getBody()
             ->getContents();
+    }
+
+    /**
+     * @param NewUser $newUser
+     * @return string id of the newly created user
+     * @throws KeycloakException
+     */
+    public function create(NewUser $newUser): string
+    {
+        $res = $this->client->sendRequest('POST', 'users', $newUser);
+
+        if ($res->getStatusCode() === 201) {
+            return $this->extractUIDFromCreateResponse($res);
+        }
+
+        $error = json_decode($res->getBody()->getContents(), true) ?? [];
+        if (!empty($error['errorMessage']) && $res->getStatusCode() === 409) {
+            throw new KeycloakException($error['errorMessage']);
+        }
+        throw new KeycloakException('Something went wrong while creating user');
+    }
+
+    /**
+     * @param ResponseInterface $res
+     * @return string
+     * @throws KeycloakException
+     */
+    private function extractUIDFromCreateResponse(ResponseInterface $res): string
+    {
+        $locationHeaders = $res->getHeader('Location');
+        $newUserUrl = reset($locationHeaders);
+        if ($newUserUrl === false) {
+            throw new KeycloakException('Created user but no Location header received');
+        }
+        $urlParts = array_reverse(explode('/', $newUserUrl));
+        return reset($urlParts);
+    }
+
+    /**
+     * @param User $user
+     * @throws KeycloakException
+     */
+    public function update(User $user): void
+    {
+        $this->client->sendRequest('PUT', "users/{$user->id}", $user);
+    }
+
+    /**
+     * @param string $id
+     * @throws KeycloakException
+     */
+    public function delete(string $id): void
+    {
+        $this->client->sendRequest('DELETE', "users/$id");
+    }
+
+    public function getRoles(string $id): array
+    {
+        $roles = $this->client
+            ->sendRequest('GET', "users/$id/role-mappings")
+            ->getBody()
+            ->getContents();
+
+
+    }
+
+    public function getClientRoles(string $userId, string $clientId): array
+    {
+        $clientRolesJson = $this->client
+            ->sendRequest('GET', "users/$userId/role-mappings/clients/$clientId")
+            ->getBody()
+            ->getContents();
+
+        $clientRolesArr = json_decode($clientRolesJson, true);
+        return array_map(static function(array $role) use ($clientId): Role {
+            $role['clientId'] = $clientId;
+            return Role::fromJson($role);
+        }, $clientRolesArr);
     }
 }

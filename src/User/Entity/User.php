@@ -130,26 +130,11 @@ class User implements JsonSerializable, JsonDeserializable
     }
 
     /**
-     * @return array
+     * @return User
      */
-    public function jsonSerialize(): array
+    public function jsonSerialize(): User
     {
-        return [
-            'id' => $this->id,
-            'username' => $this->username,
-            'firstName' => $this->firstName,
-            'lastName' => $this->lastName,
-            'email' => $this->email,
-            'enabled' => $this->enabled,
-            'totp' => $this->totp,
-            'emailVerified' => $this->emailVerified,
-            'createdTimestamp' => $this->createdTimestamp,
-            'notBefore' => $this->notBefore,
-            'attributes' => $this->attributes,
-            'requiredActions' => $this->requiredActions,
-            'access' => $this->access,
-            'disableableCredentialTypes' => $this->disableableCredentialTypes
-        ];
+        return $this;
     }
 
     /**

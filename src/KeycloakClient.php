@@ -1,8 +1,10 @@
 <?php
 namespace Keycloak;
 
+use Exception;
 use GuzzleHttp\Client as GuzzleClient;
 use GuzzleHttp\Exception\GuzzleException;
+use JsonSerializable;
 use Keycloak\Exception\KeycloakCredentialsException;
 use Keycloak\Exception\KeycloakException;
 use League\OAuth2\Client\Provider\Exception\IdentityProviderException;
@@ -47,17 +49,21 @@ class KeycloakClient
     /**
      * @param string $method
      * @param string $uri
-     * @param array|null $body
+     * @param JsonSerializable|null $body
      * @param array $headers
      * @return ResponseInterface
      * @throws KeycloakException
      */
-    public function sendRequest(string $method, string $uri, array $body = null, array $headers = []): ResponseInterface
+    public function sendRequest(string $method, string $uri, ?JsonSerializable $body = null, array $headers = []): ResponseInterface
     {
         try {
             $accessToken = $this->oauthProvider->getAccessToken('client_credentials');
-        } catch (IdentityProviderException $ex) {
+        } catch (Exception $ex) {
             throw new KeycloakCredentialsException();
+        }
+
+        if ($body !== null) {
+            $headers['Content-Type'] = 'application/json';
         }
 
         $request = $this->oauthProvider->getAuthenticatedRequest(
