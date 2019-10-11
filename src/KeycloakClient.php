@@ -1,5 +1,4 @@
 <?php
-
 namespace Keycloak;
 
 use GuzzleHttp\Client as GuzzleClient;
