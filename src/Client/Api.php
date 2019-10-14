@@ -5,6 +5,7 @@ namespace Keycloak\Client;
 use Keycloak\Client\Entity\Client;
 use Keycloak\Exception\KeycloakException;
 use Keycloak\KeycloakClient;
+use Keycloak\User\Entity\Role;
 
 class Api
 {
@@ -71,5 +72,23 @@ class Api
             }
         }
         return null;
+    }
+
+    /**
+     * @param string $id
+     * @return Role[]
+     * @throws KeycloakException
+     */
+    public function getRoles(string $id): array
+    {
+        $json = $this->client
+            ->sendRequest('GET', "clients/$id/roles")
+            ->getBody()
+            ->getContents();
+
+        return array_map(static function ($roleArr) use ($id): Role {
+            $roleArr['clientId'] = $id;
+            return Role::fromJson($roleArr);
+        }, json_decode($json, true));
     }
 }

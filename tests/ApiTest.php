@@ -99,6 +99,84 @@ final class ApiTest extends TestCase
         $this->assertEquals('php', $updatedUser->lastName);
     }
 
+    public function testUserRoles(): void
+    {
+        $user = $this->getUser();
+        $roles = $this->userApi->getRoles($user->id);
+        $this->assertNotEmpty($roles);
+
+        $realmRoles = array_filter($roles, static function (Role $role): bool {
+            return !$role->clientRole;
+        });
+        $this->assertGreaterThan(0, count($realmRoles));
+
+        $clientRoles = array_filter($roles, static function (Role $role): bool {
+            return $role->clientRole;
+        });
+        $this->assertGreaterThan(0, count($clientRoles));
+    }
+
+    public function testUserListClientRoles(): void
+    {
+        $user = $this->getUser();
+        $client = $this->clientApi->findByClientId('account');
+        $clientRoles = $this->userApi->getClientRoles($user->id, $client->id);
+        $this->assertNotEmpty($clientRoles);
+
+        $client = $this->clientApi->findByClientId('realm-management');
+        $availableRoles = $this->userApi->getAvailableClientRoles($user->id, $client->id);
+        $this->assertNotEmpty($availableRoles);
+
+        foreach (array_merge($clientRoles, $availableRoles) as $role) {
+            $this->assertInstanceOf(Role::class, $role);
+        }
+
+        $this->expectException(KeycloakException::class);
+        $this->userApi->getClientRoles($user->id, 'blipblop');
+    }
+
+    public function testUserAddClientRole(): void
+    {
+        $user = $this->getUser();
+        $client = $this->clientApi->findByClientId('realm-management');
+
+        $availableRoles = $this->userApi->getAvailableClientRoles($user->id, $client->id);
+        $viewClientsRole = null;
+        foreach ($availableRoles as $role) {
+            if ($role->name === 'view-clients') {
+                $viewClientsRole = $role;
+            }
+        }
+        $this->assertInstanceOf(Role::class, $viewClientsRole);
+
+        $rolesBeforeAdd = $this->userApi->getRoles($user->id);
+        $this->userApi->addClientRoles($user->id, $client->id, [$viewClientsRole]);
+
+        $rolesAfterAdd = $this->userApi->getRoles($user->id);
+        $this->assertGreaterThan(count($rolesBeforeAdd), count($rolesAfterAdd));
+
+        $added = false;
+        foreach ($rolesAfterAdd as $role) {
+            if ($role->id === $viewClientsRole->id) {
+                $added = true;
+            }
+        }
+        $this->assertTrue($added);
+
+        $availableRolesAfterAdd = $this->userApi->getAvailableClientRoles($user->id, $client->id);
+        $this->assertLessThan(count($availableRoles), count($availableRolesAfterAdd));
+    }
+
+    public function testUserDeleteClientRoles(): void
+    {
+        $user = $this->getUser();
+        $client = $this->clientApi->findByClientId('realm-management');
+        $roles = $this->userApi->getClientRoles($user->id, $client->id);
+
+        $this->userApi->deleteClientRoles($user->id, $client->id, $roles);
+        $this->assertEmpty($this->userApi->getClientRoles($user->id, $client->id));
+    }
+
     public function testClientFindAll(): void
     {
         $allClients = $this->clientApi->findAll();
@@ -119,32 +197,15 @@ final class ApiTest extends TestCase
         $this->assertNull($this->clientApi->find('blipblop'));
     }
 
-    public function testUserRoles(): void
+    public function testClientGetRoles(): void
     {
-        $user = $this->getUser();
-        $roles = $this->userApi->getRoles($user->id);
-        $this->assertNotEmpty($roles);
-
-        $realmRoles = array_filter($roles, static function (Role $role): bool {
-            return !$role->clientRole;
-        });
-        $this->assertGreaterThan(0, count($realmRoles));
-
-        $clientRoles = array_filter($roles, static function (Role $role): bool {
-            return $role->clientRole;
-        });
-        $this->assertGreaterThan(0, count($clientRoles));
-    }
-
-    public function testUserClientRoles(): void
-    {
-        $user = $this->getUser();
-        $client = $this->clientApi->findByClientId('account');
-        $clientRoles = $this->userApi->getClientRoles($user->id, $client->id);
+        $client = $this->clientApi->findByClientId('realm-management');
+        $this->assertInstanceOf(Client::class, $client);
+        $clientRoles = $this->clientApi->getRoles($client->id);
         $this->assertNotEmpty($clientRoles);
 
         $this->expectException(KeycloakException::class);
-        $this->userApi->getClientRoles($user->id, 'blipblop');
+        $this->clientApi->getRoles('blipblop');
     }
 
     public function testUserDelete(): void

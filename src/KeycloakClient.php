@@ -49,12 +49,12 @@ class KeycloakClient
     /**
      * @param string $method
      * @param string $uri
-     * @param JsonSerializable|null $body
+     * @param mixed $body
      * @param array $headers
      * @return ResponseInterface
      * @throws KeycloakException
      */
-    public function sendRequest(string $method, string $uri, ?JsonSerializable $body = null, array $headers = []): ResponseInterface
+    public function sendRequest(string $method, string $uri, $body = null, array $headers = []): ResponseInterface
     {
         try {
             $accessToken = $this->oauthProvider->getAccessToken('client_credentials');

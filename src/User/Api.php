@@ -5,6 +5,7 @@ use Keycloak\Exception\KeycloakException;
 use Keycloak\KeycloakClient;
 use Keycloak\User\Entity\NewUser;
 use Keycloak\User\Entity\Role;
+use Keycloak\User\Entity\Transformer\RoleTransformer;
 use Keycloak\User\Entity\User;
 use Psr\Http\Message\ResponseInterface;
 
@@ -129,64 +130,88 @@ class Api
     }
 
     /**
-     * @param string $userId
+     * @param string $id
      * @return Role[]
+     * @throws KeycloakException
      */
-    public function getRoles(string $userId): array
+    public function getRoles(string $id): array
     {
         $roleJson = $this->client
-            ->sendRequest('GET', "users/$userId/role-mappings")
+            ->sendRequest('GET', "users/$id/role-mappings")
             ->getBody()
             ->getContents();
         $roleArr = json_decode($roleJson, true);
 
-
         $realmRoles = !empty($roleArr['realmMappings'])
-            ? array_map($this->transformRole(null), $roleArr['realmMappings'])
+            ? array_map(RoleTransformer::createRoleTransformer(null), $roleArr['realmMappings'])
             : [];
 
         $clientRoles = !empty($roleArr['clientMappings'])
-            ? array_reduce($roleArr['clientMappings'], [$this, 'transformClientRoles'], [])
+            ? array_reduce($roleArr['clientMappings'], [RoleTransformer::class, 'transformClientRoles'], [])
             : [];
         return array_merge($realmRoles, $clientRoles);
     }
 
     /**
-     * @param Role[] $roles
-     * @param array $client
-     * @return array
-     */
-    private function transformClientRoles(array $roles, array $client): array
-    {
-        $clientRoles = array_map($this->transformRole($client['id']), $client['mappings']);
-        return array_merge($roles, $clientRoles);
-    }
-
-    /**
-     * @param string $userId
+     * @param string $id
      * @param string $clientId
      * @return Role[]
+     * @throws KeycloakException
      */
-    public function getClientRoles(string $userId, string $clientId): array
+    public function getClientRoles(string $id, string $clientId): array
     {
         $clientRolesJson = $this->client
-            ->sendRequest('GET', "users/$userId/role-mappings/clients/$clientId")
+            ->sendRequest('GET', "users/$id/role-mappings/clients/$clientId")
             ->getBody()
             ->getContents();
 
         $clientRolesArr = json_decode($clientRolesJson, true);
-        return array_map($this->transformRole($clientId), $clientRolesArr);
+        return array_map(RoleTransformer::createRoleTransformer($clientId), $clientRolesArr);
     }
 
     /**
-     * @param string|null $clientId
-     * @return callable
+     * @param string $id
+     * @param string $clientId
+     * @return Role[]
+     * @throws KeycloakException
      */
-    private function transformRole(?string $clientId): callable
+    public function getAvailableClientRoles(string $id, string $clientId): array
     {
-        return static function(array $role) use ($clientId): Role {
-            $role['clientId'] = $clientId;
-            return Role::fromJson($role);
-        };
+        $clientRolesJson = $this->client
+            ->sendRequest('GET', "users/$id/role-mappings/clients/$clientId/available")
+            ->getBody()
+            ->getContents();
+
+        $clientRolesArr = json_decode($clientRolesJson, true);
+        return array_map(RoleTransformer::createRoleTransformer($clientId), $clientRolesArr);
+    }
+
+    /**
+     * @param string $id
+     * @param string $clientId
+     * @param Role[] $rolesToAdd
+     */
+    public function addClientRoles(string $id, string $clientId, array $rolesToAdd): void
+    {
+        $this->client
+            ->sendRequest(
+                'POST',
+                "users/$id/role-mappings/clients/$clientId",
+                array_map([RoleTransformer::class, 'toMinimalIdentifiableRole'], $rolesToAdd));
+    }
+
+    /**
+     * @param string $id
+     * @param string $clientId
+     * @param Role[] $rolesToDelete
+     * @throws KeycloakException
+     */
+    public function deleteClientRoles(string $id, string $clientId, array $rolesToDelete): void
+    {
+        $this->client
+            ->sendRequest(
+                'DELETE',
+                "users/$id/role-mappings/clients/$clientId",
+                array_map([RoleTransformer::class, 'toMinimalIdentifiableRole'], $rolesToDelete));
     }
 }
