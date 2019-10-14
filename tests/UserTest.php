@@ -1,7 +1,5 @@
 <?php
 
-use Keycloak\Client\Entity\Client;
-use Keycloak\Client\Entity\ProtocolMapperConfig;
 use Keycloak\Exception\KeycloakException;
 use Keycloak\User\Api as UserApi;
 use Keycloak\Client\Api as ClientApi;
@@ -50,6 +48,7 @@ final class UserTest extends TestCase
 
     public function testCreate(): void
     {
+        $this->user->enabled = false;
         $userId = $this->userApi->create($this->user);
         $this->assertNotEmpty($userId);
     }
@@ -90,14 +89,17 @@ final class UserTest extends TestCase
     public function testUpdate(): void
     {
         $user = $this->getUser();
+        $this->assertFalse($user->enabled);
 
         $user->firstName = 'unit';
         $user->lastName = 'php';
+        $user->enabled = true;
         $this->userApi->update($user);
 
         $updatedUser = $this->userApi->find($user->id);
         $this->assertEquals('unit', $updatedUser->firstName);
         $this->assertEquals('php', $updatedUser->lastName);
+        $this->assertTrue($updatedUser->enabled);
     }
 
     public function testAddAttribute(): void
