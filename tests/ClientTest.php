@@ -11,14 +11,14 @@ require_once 'TestClient.php';
  */
 final class ClientTest extends TestCase
 {
-    public function testInvalidClient(): void
+    public function testInvalidKeycloakClient(): void
     {
         $brokenClient = new KeycloakClient('this', 'client', 'is', 'http://broken.com');
         $this->expectException(KeycloakCredentialsException::class);
         $brokenClient->sendRequest('GET', '/');
     }
 
-    public function testValidClient(): void
+    public function testValidKeycloakClient(): void
     {
         global $client;
         $res = $client->sendRequest('GET', '/');

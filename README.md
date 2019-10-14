@@ -37,3 +37,7 @@ Any other versions might work but is not guaranteed.
 | --- | ---: |
 | PHP | 7.1 / 7.2 / 7.3 |
 | Keycloak API  | 7 |
+
+### Contributing
+
+Please read our [contribution guidelines](./CONTRIBUTING.md) before contributing.

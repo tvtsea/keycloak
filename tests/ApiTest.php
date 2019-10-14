@@ -10,6 +10,12 @@ use Keycloak\User\Entity\NewUser;
 
 require_once 'TestClient.php';
 
+/**
+ * Class ApiTest
+ * These tests are ran synchronously from top to bottom.
+ * A user is created at the start and cleanup is done at the end.
+ * This way we don't need any mocks and we can test with a real KC instance for higher accuracy.
+ */
 final class ApiTest extends TestCase
 {
     /**
@@ -61,7 +67,9 @@ final class ApiTest extends TestCase
     private function getUser(): ?User
     {
         $users = $this->userApi->findAll(['username' => $this->user->username, 'email' => $this->user->email]);
-        $this->assertCount(1, $users);
+        if (empty($users)) {
+            return null;
+        }
         return array_pop($users);
     }
 
