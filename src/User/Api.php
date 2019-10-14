@@ -128,16 +128,45 @@ class Api
         $this->client->sendRequest('DELETE', "users/$id");
     }
 
-    public function getRoles(string $id): array
+    /**
+     * @param string $userId
+     * @return Role[]
+     */
+    public function getRoles(string $userId): array
     {
-        $roles = $this->client
-            ->sendRequest('GET', "users/$id/role-mappings")
+        $roleJson = $this->client
+            ->sendRequest('GET', "users/$userId/role-mappings")
             ->getBody()
             ->getContents();
+        $roleArr = json_decode($roleJson, true);
 
 
+        $realmRoles = !empty($roleArr['realmMappings'])
+            ? array_map($this->transformRole(null), $roleArr['realmMappings'])
+            : [];
+
+        $clientRoles = !empty($roleArr['clientMappings'])
+            ? array_reduce($roleArr['clientMappings'], [$this, 'transformClientRoles'], [])
+            : [];
+        return array_merge($realmRoles, $clientRoles);
     }
 
+    /**
+     * @param Role[] $roles
+     * @param array $client
+     * @return array
+     */
+    private function transformClientRoles(array $roles, array $client): array
+    {
+        $clientRoles = array_map($this->transformRole($client['id']), $client['mappings']);
+        return array_merge($roles, $clientRoles);
+    }
+
+    /**
+     * @param string $userId
+     * @param string $clientId
+     * @return Role[]
+     */
     public function getClientRoles(string $userId, string $clientId): array
     {
         $clientRolesJson = $this->client
@@ -146,9 +175,18 @@ class Api
             ->getContents();
 
         $clientRolesArr = json_decode($clientRolesJson, true);
-        return array_map(static function(array $role) use ($clientId): Role {
+        return array_map($this->transformRole($clientId), $clientRolesArr);
+    }
+
+    /**
+     * @param string|null $clientId
+     * @return callable
+     */
+    private function transformRole(?string $clientId): callable
+    {
+        return static function(array $role) use ($clientId): Role {
             $role['clientId'] = $clientId;
             return Role::fromJson($role);
-        }, $clientRolesArr);
+        };
     }
 }

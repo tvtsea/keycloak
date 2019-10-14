@@ -4,6 +4,7 @@ use Keycloak\Client\Entity\Client;
 use Keycloak\Exception\KeycloakException;
 use Keycloak\User\Api as UserApi;
 use Keycloak\Client\Api as ClientApi;
+use Keycloak\User\Entity\Role;
 use Keycloak\User\Entity\User;
 use PHPUnit\Framework\TestCase;
 use Keycloak\User\Entity\NewUser;
@@ -118,6 +119,23 @@ final class ApiTest extends TestCase
         $this->assertNull($this->clientApi->find('blipblop'));
     }
 
+    public function testUserRoles(): void
+    {
+        $user = $this->getUser();
+        $roles = $this->userApi->getRoles($user->id);
+        $this->assertNotEmpty($roles);
+
+        $realmRoles = array_filter($roles, static function (Role $role): bool {
+            return !$role->clientRole;
+        });
+        $this->assertGreaterThan(0, count($realmRoles));
+
+        $clientRoles = array_filter($roles, static function (Role $role): bool {
+            return $role->clientRole;
+        });
+        $this->assertGreaterThan(0, count($clientRoles));
+    }
+
     public function testUserClientRoles(): void
     {
         $user = $this->getUser();
@@ -128,7 +146,6 @@ final class ApiTest extends TestCase
         $this->expectException(KeycloakException::class);
         $this->userApi->getClientRoles($user->id, 'blipblop');
     }
-
 
     public function testUserDelete(): void
     {
