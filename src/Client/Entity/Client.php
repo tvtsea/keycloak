@@ -22,20 +22,52 @@ class Client implements JsonDeserializable
     public $enabled;
 
     /**
+     * @var array
+     */
+    public $attributes;
+
+    /**
+     * @var array
+     */
+    public $webOrigins;
+
+    /**
+     * @var array
+     */
+    public $redirectUris;
+
+    /**
+     * @var ProtocolMapper[]
+     */
+    public $protocolMappers;
+
+    /**
      * Client constructor.
      * TODO: this obviously isn't everything yet.
      * @param string $id
      * @param string $clientId
      * @param bool $enabled
+     * @param array $attributes
+     * @param array $webOrigins
+     * @param array $redirectUris
+     * @param ProtocolMapper[] $protocolMappers
      */
     public function __construct(
         string $id,
         string $clientId,
-        bool $enabled
+        bool $enabled,
+        array $attributes,
+        array $webOrigins,
+        array $redirectUris,
+        array $protocolMappers
     ) {
         $this->id = $id;
         $this->clientId = $clientId;
         $this->enabled = $enabled;
+        $this->attributes = $attributes;
+        $this->webOrigins = $webOrigins;
+        $this->redirectUris = $redirectUris;
+        $this->protocolMappers = $protocolMappers;
     }
 
     /**
@@ -48,7 +80,11 @@ class Client implements JsonDeserializable
         return new self(
             $arr['id'],
             $arr['clientId'],
-            $arr['enabled']
+            $arr['enabled'],
+            $arr['attributes'] ?? [],
+            $arr['webOrigins'],
+            $arr['redirectUris'],
+            array_map([ProtocolMapper::class, 'fromJson'], $arr['protocolMappers'] ?? [])
         );
     }
 }

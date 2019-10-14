@@ -1,11 +1,4 @@
 <?php
-/**
- * Copyright (C) A&C systems nv - All Rights Reserved
- * Unauthorized copying of this file, via any medium is strictly prohibited
- * Proprietary and confidential
- * Written by A&C systems <web.support@ac-systems.com>
- */
-
 namespace Keycloak\User\Entity\Transformer;
 
 use Keycloak\User\Entity\Role;

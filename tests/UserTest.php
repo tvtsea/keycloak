@@ -1,6 +1,7 @@
 <?php
 
 use Keycloak\Client\Entity\Client;
+use Keycloak\Client\Entity\ProtocolMapperConfig;
 use Keycloak\Exception\KeycloakException;
 use Keycloak\User\Api as UserApi;
 use Keycloak\Client\Api as ClientApi;
@@ -17,7 +18,7 @@ require_once 'TestClient.php';
  * A user is created at the start and cleanup is done at the end.
  * This way we don't need any mocks and we can test with a real KC instance for higher accuracy.
  */
-final class ApiTest extends TestCase
+final class UserTest extends TestCase
 {
     /**
      * @var UserApi
@@ -34,7 +35,7 @@ final class ApiTest extends TestCase
      */
     protected $user;
 
-    protected function setUp()
+    protected function setUp(): void
     {
         global $client;
         $this->userApi = new UserApi($client);
@@ -47,13 +48,13 @@ final class ApiTest extends TestCase
         );
     }
 
-    public function testUserCreate(): void
+    public function testCreate(): void
     {
         $userId = $this->userApi->create($this->user);
         $this->assertNotEmpty($userId);
     }
 
-    public function testUserDuplicateCreate(): void
+    public function testDuplicateCreate(): void
     {
         $this->expectException(KeycloakException::class);
         $this->userApi->create($this->user);
@@ -74,19 +75,19 @@ final class ApiTest extends TestCase
         return array_pop($users);
     }
 
-    public function testUserFind(): void
+    public function testFind(): void
     {
         $user = $this->getUser();
         $this->assertInstanceOf(User::class, $user);
     }
 
-    public function testUserFindNothing(): void
+    public function testFindNothing(): void
     {
         $noUser = $this->userApi->find('blipblop');
         $this->assertNull($noUser);
     }
 
-    public function testUserUpdate(): void
+    public function testUpdate(): void
     {
         $user = $this->getUser();
 
@@ -99,7 +100,31 @@ final class ApiTest extends TestCase
         $this->assertEquals('php', $updatedUser->lastName);
     }
 
-    public function testUserRoles(): void
+    public function testAddAttribute(): void
+    {
+        $user = $this->getUser();
+
+        $this->assertEmpty($user->attributes);
+        $user->attributes['customer_code'] = ['KL113'];
+        $this->userApi->update($user);
+
+        $user = $this->getUser();
+        $this->assertNotEmpty($user->attributes);
+        $this->assertEquals($user->attributes['customer_code'][0], 'KL113');
+    }
+
+    public function testDeleteAttribute(): void
+    {
+        $user = $this->getUser();
+        $this->assertEquals($user->attributes['customer_code'][0], 'KL113');
+        $user->attributes = [];
+        $this->userApi->update($user);
+
+        $user = $this->getUser();
+        $this->assertEmpty($user->attributes);
+    }
+
+    public function testRoles(): void
     {
         $user = $this->getUser();
         $roles = $this->userApi->getRoles($user->id);
@@ -116,7 +141,7 @@ final class ApiTest extends TestCase
         $this->assertGreaterThan(0, count($clientRoles));
     }
 
-    public function testUserListClientRoles(): void
+    public function testListClientRoles(): void
     {
         $user = $this->getUser();
         $client = $this->clientApi->findByClientId('account');
@@ -135,7 +160,7 @@ final class ApiTest extends TestCase
         $this->userApi->getClientRoles($user->id, 'blipblop');
     }
 
-    public function testUserAddClientRole(): void
+    public function testAddClientRole(): void
     {
         $user = $this->getUser();
         $client = $this->clientApi->findByClientId('realm-management');
@@ -167,7 +192,7 @@ final class ApiTest extends TestCase
         $this->assertLessThan(count($availableRoles), count($availableRolesAfterAdd));
     }
 
-    public function testUserDeleteClientRoles(): void
+    public function testDeleteClientRoles(): void
     {
         $user = $this->getUser();
         $client = $this->clientApi->findByClientId('realm-management');
@@ -177,38 +202,7 @@ final class ApiTest extends TestCase
         $this->assertEmpty($this->userApi->getClientRoles($user->id, $client->id));
     }
 
-    public function testClientFindAll(): void
-    {
-        $allClients = $this->clientApi->findAll();
-        $this->assertNotEmpty($allClients);
-    }
-
-    public function testClientFind(): void
-    {
-        // account is a standard client that should always exist
-        $client = $this->clientApi->findByClientId('account');
-        $this->assertInstanceOf(Client::class, $client);
-        $this->assertInstanceOf(Client::class, $this->clientApi->find($client->id));
-    }
-
-    public function testClientFindNothing(): void
-    {
-        $this->assertNull($this->clientApi->findByClientId('blipblop'));
-        $this->assertNull($this->clientApi->find('blipblop'));
-    }
-
-    public function testClientGetRoles(): void
-    {
-        $client = $this->clientApi->findByClientId('realm-management');
-        $this->assertInstanceOf(Client::class, $client);
-        $clientRoles = $this->clientApi->getRoles($client->id);
-        $this->assertNotEmpty($clientRoles);
-
-        $this->expectException(KeycloakException::class);
-        $this->clientApi->getRoles('blipblop');
-    }
-
-    public function testUserDelete(): void
+    public function testDelete(): void
     {
         $user = $this->getUser();
 

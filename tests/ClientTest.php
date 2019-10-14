@@ -1,28 +1,59 @@
 <?php
 
-use Keycloak\Exception\KeycloakCredentialsException;
-use Keycloak\KeycloakClient;
+use Keycloak\Client\Api as ClientApi;
+use Keycloak\Client\Entity\Client;
+use Keycloak\Exception\KeycloakException;
 use PHPUnit\Framework\TestCase;
 
 require_once 'TestClient.php';
 
-/**
- * Class ClientTest
- */
-final class ClientTest extends TestCase
+class ClientTest extends TestCase
 {
-    public function testInvalidKeycloakClient(): void
-    {
-        $brokenClient = new KeycloakClient('this', 'client', 'is', 'http://broken.com');
-        $this->expectException(KeycloakCredentialsException::class);
-        $brokenClient->sendRequest('GET', '/');
-    }
+    /**
+     * @var ClientApi
+     */
+    protected $clientApi;
 
-    public function testValidKeycloakClient(): void
+    protected function setUp(): void
     {
         global $client;
-        $res = $client->sendRequest('GET', '/');
-        $this->assertEquals(200, $res->getStatusCode());
+        $this->clientApi = new ClientApi($client);
+    }
+
+    public function testFindAll(): void
+    {
+        $allClients = $this->clientApi->findAll();
+        $this->assertNotEmpty($allClients);
+    }
+
+    public function testFind(): void
+    {
+        // account is a standard client that should always exist
+        $client = $this->clientApi->findByClientId('account');
+        $this->assertInstanceOf(Client::class, $client);
+        $this->assertInstanceOf(Client::class, $this->clientApi->find($client->id));
+    }
+
+    public function testFindNothing(): void
+    {
+        $this->assertNull($this->clientApi->findByClientId('blipblop'));
+        $this->assertNull($this->clientApi->find('blipblop'));
+    }
+
+    public function testGetRoles(): void
+    {
+        $client = $this->clientApi->findByClientId('realm-management');
+        $this->assertInstanceOf(Client::class, $client);
+        $clientRoles = $this->clientApi->getRoles($client->id);
+        $this->assertNotEmpty($clientRoles);
+
+        $this->expectException(KeycloakException::class);
+        $this->clientApi->getRoles('blipblop');
+    }
+
+    public function testGetProtocolMappers(): void
+    {
+        $client = $this->clientApi->findByClientId('realm-management');
+        $this->assertNotEmpty($client->protocolMappers);
     }
 }
-
