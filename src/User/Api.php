@@ -53,6 +53,8 @@ class Api
      */
     public function findAll(array $query = []): array
     {
+        $query['first'] = $query['first'] ?? 0;
+        $query['max'] = $query['max'] ?? $this->count();
         $params = http_build_query($query);
         $json = $this->client
             ->sendRequest('GET', 'users' . ($params ? "?$params" : ''))
