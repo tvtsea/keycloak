@@ -131,6 +131,16 @@ class Api
         $this->client->sendRequest('DELETE', "users/$id");
     }
 
+    public function resetPassword(string $id, string $newPassword, bool $temporary = false): void
+    {
+        $passwordReset = [
+            'type' => 'password',
+            'value' => $newPassword,
+            'temporary' => $temporary
+        ];
+        $this->client->sendRequest('PUT', "users/$id/reset-password", $passwordReset);
+    }
+
     /**
      * @param string $id
      * @return Role[]

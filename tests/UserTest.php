@@ -102,6 +102,15 @@ final class UserTest extends TestCase
         $this->assertTrue($updatedUser->enabled);
     }
 
+    public function testResetPassword(): void
+    {
+        $this->expectNotToPerformAssertions();
+
+        $user = $this->getUser();
+        $this->userApi->resetPassword($user->id, 'NewPassword123');
+        $this->userApi->resetPassword($user->id, 'NewTempPassword123', true);
+    }
+
     public function testAddAttribute(): void
     {
         $user = $this->getUser();
