@@ -18,10 +18,15 @@ class Role implements JsonSerializable, JsonDeserializable
     public $name;
     
     /**
-     * @var string
+     * @var string|null
      */
     public $description;
-    
+
+    /**
+     * @var bool
+     */
+    public $composite;
+
     /**
      * @var bool
      */
@@ -36,14 +41,16 @@ class Role implements JsonSerializable, JsonDeserializable
      * Role constructor.
      * @param string $id
      * @param string $name
-     * @param string $description
+     * @param string|null $description
+     * @param bool $composite
      * @param bool $clientRole
      * @param string|null $clientId
      */
     public function __construct(
         string $id,
         string $name,
-        string $description,
+        ?string $description,
+        bool $composite,
         bool $clientRole,
         ?string $clientId
     ) {
@@ -52,6 +59,7 @@ class Role implements JsonSerializable, JsonDeserializable
         $this->description = $description;
         $this->clientRole = $clientRole;
         $this->clientId = $clientId;
+        $this->composite = $composite;
     }
 
     /**
@@ -72,7 +80,8 @@ class Role implements JsonSerializable, JsonDeserializable
         return new self(
             $arr['id'],
             $arr['name'],
-            $arr['description'],
+            $arr['description'] ?? null,
+            $arr['composite'] ?? false,
             $arr['clientRole'],
             $arr['clientId']
         );
