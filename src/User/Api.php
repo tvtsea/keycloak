@@ -131,6 +131,12 @@ class Api
         $this->client->sendRequest('DELETE', "users/$id");
     }
 
+    /**
+     * @param string $id
+     * @param string $newPassword
+     * @param bool $temporary
+     * @throws KeycloakException
+     */
     public function resetPassword(string $id, string $newPassword, bool $temporary = false): void
     {
         $passwordReset = [
