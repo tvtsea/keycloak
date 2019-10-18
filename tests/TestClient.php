@@ -1,17 +1,19 @@
 <?php
 
 use Keycloak\KeycloakClient;
+use Symfony\Component\Dotenv\Dotenv;
+
+(new Dotenv(false))->loadEnv(__DIR__ . '/.env');
 
 class TestClient
 {
     public static function createClient(): KeycloakClient
     {
-        $credentials = json_decode(file_get_contents(__DIR__ . '/credentials.json'), true);
         $client = new KeycloakClient(
-            $credentials['clientId'],
-            $credentials['clientSecret'],
-            $credentials['realm'],
-            $credentials['url']
+            $_SERVER['KC_CLIENT_ID'],
+            $_SERVER['KC_CLIENT_SECRET'],
+            $_SERVER['KC_REALM'],
+            $_SERVER['KC_URL']
         );
 
         return $client;

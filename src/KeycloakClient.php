@@ -4,10 +4,8 @@ namespace Keycloak;
 use Exception;
 use GuzzleHttp\Client as GuzzleClient;
 use GuzzleHttp\Exception\GuzzleException;
-use JsonSerializable;
 use Keycloak\Exception\KeycloakCredentialsException;
 use Keycloak\Exception\KeycloakException;
-use League\OAuth2\Client\Provider\Exception\IdentityProviderException;
 use League\OAuth2\Client\Provider\GenericProvider;
 use Psr\Http\Message\ResponseInterface;
 
@@ -82,5 +80,13 @@ class KeycloakClient
                 $ex
             );
         }
+    }
+
+    /**
+     * @return GenericProvider
+     */
+    public function getOAuthProvider(): GenericProvider
+    {
+        return $this->oauthProvider;
     }
 }
