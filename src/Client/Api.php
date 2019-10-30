@@ -5,6 +5,7 @@ namespace Keycloak\Client;
 use Keycloak\Client\Entity\Client;
 use Keycloak\Exception\KeycloakException;
 use Keycloak\KeycloakClient;
+use Keycloak\User\Entity\CompositeRole;
 use Keycloak\User\Entity\Role;
 
 class Api
@@ -83,6 +84,67 @@ class Api
     {
         $json = $this->client
             ->sendRequest('GET', "clients/$id/roles")
+            ->getBody()
+            ->getContents();
+
+        return array_map(static function ($roleArr) use ($id): Role {
+            $roleArr['clientId'] = $id;
+            return Role::fromJson($roleArr);
+        }, json_decode($json, true));
+    }
+
+    /**
+     * @param string $id
+     * @return array
+     */
+    public function getCompositeRoles(string $id): array
+    {
+        $json = $this->client
+            ->sendRequest('GET', "clients/$id/roles")
+            ->getBody()
+            ->getContents();
+
+        $filtered = array_values(array_filter(json_decode($json, true), static function ($roleArr) {
+            return $roleArr['composite'];
+        }));
+
+        return array_map(function ($roleArr) use ($id): Role {
+            $roleArr['clientId'] = $id;
+            return Role::fromJson($roleArr);
+        }, $filtered);
+    }
+
+    /**
+     * @param string $id
+     * @return array
+     */
+    public function getCompositeRolesWithPermissions(string $id): array
+    {
+        $json = $this->client
+            ->sendRequest('GET', "clients/$id/roles")
+            ->getBody()
+            ->getContents();
+
+        $filtered = array_values(array_filter(json_decode($json, true), static function ($roleArr) use ($id) {
+            return $roleArr['composite'];
+        }));
+
+        return array_map(function ($roleArr) use ($id): CompositeRole {
+            $roleArr['clientId'] = $id;
+            $roleArr['permissions'] = $this->getCompositesFromRole($id, $roleArr['name']);
+            return CompositeRole::fromJson($roleArr);
+        }, $filtered);
+    }
+
+    /**
+     * @param string $id
+     * @param $roleName
+     * @return array
+     */
+    public function getCompositesFromRole(string $id, $roleName): array
+    {
+        $json = $this->client
+            ->sendRequest('GET', "clients/$id/roles/$roleName/composites")
             ->getBody()
             ->getContents();
 
