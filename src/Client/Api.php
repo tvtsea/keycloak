@@ -109,7 +109,7 @@ class Api
             return [];
         }
 
-        $filtered = array_values(array_filter($jsonDecoded, static function ($roleArr): array {
+        $filtered = array_values(array_filter($jsonDecoded, static function ($roleArr): bool {
             return $roleArr['composite'];
         }));
 
@@ -135,7 +135,7 @@ class Api
             return [];
         }
 
-        $filtered = array_values(array_filter($jsonDecoded, static function ($roleArr) use ($id) {
+        $filtered = array_values(array_filter($jsonDecoded, static function ($roleArr): bool {
             return $roleArr['composite'];
         }));
 
