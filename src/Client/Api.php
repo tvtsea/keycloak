@@ -139,7 +139,7 @@ class Api
             return $roleArr['composite'];
         }));
 
-        return array_map(static function ($roleArr) use ($id): CompositeRole {
+        return array_map(function ($roleArr) use ($id): CompositeRole {
             $roleArr['clientId'] = $id;
             $roleArr['permissions'] = $this->getCompositesFromRole($id, $roleArr['name']);
             return CompositeRole::fromJson($roleArr);
