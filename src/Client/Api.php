@@ -104,11 +104,16 @@ class Api
             ->getBody()
             ->getContents();
 
-        $filtered = array_values(array_filter(json_decode($json, true), static function ($roleArr) {
+        $jsonDecoded = json_decode($json, true);
+        if ($jsonDecoded === null) {
+            return [];
+        }
+
+        $filtered = array_values(array_filter($jsonDecoded, static function ($roleArr): array {
             return $roleArr['composite'];
         }));
 
-        return array_map(function ($roleArr) use ($id): Role {
+        return array_map(static function ($roleArr) use ($id): Role {
             $roleArr['clientId'] = $id;
             return Role::fromJson($roleArr);
         }, $filtered);
@@ -125,11 +130,16 @@ class Api
             ->getBody()
             ->getContents();
 
-        $filtered = array_values(array_filter(json_decode($json, true), static function ($roleArr) use ($id) {
+        $jsonDecoded = json_decode($json, true);
+        if ($jsonDecoded === null) {
+            return [];
+        }
+
+        $filtered = array_values(array_filter($jsonDecoded, static function ($roleArr) use ($id) {
             return $roleArr['composite'];
         }));
 
-        return array_map(function ($roleArr) use ($id): CompositeRole {
+        return array_map(static function ($roleArr) use ($id): CompositeRole {
             $roleArr['clientId'] = $id;
             $roleArr['permissions'] = $this->getCompositesFromRole($id, $roleArr['name']);
             return CompositeRole::fromJson($roleArr);
@@ -138,19 +148,24 @@ class Api
 
     /**
      * @param string $id
-     * @param $roleName
+     * @param string $roleName
      * @return array
      */
-    public function getCompositesFromRole(string $id, $roleName): array
+    public function getCompositesFromRole(string $id, string $roleName): array
     {
         $json = $this->client
             ->sendRequest('GET', "clients/$id/roles/$roleName/composites")
             ->getBody()
             ->getContents();
 
+        $jsonDecoded = json_decode($json, true);
+        if ($jsonDecoded === null) {
+            return [];
+        }
+
         return array_map(static function ($roleArr) use ($id): Role {
             $roleArr['clientId'] = $id;
             return Role::fromJson($roleArr);
-        }, json_decode($json, true));
+        }, $jsonDecoded);
     }
 }
