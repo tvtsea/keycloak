@@ -10,6 +10,7 @@ namespace Keycloak\User\Entity;
 
 use JsonSerializable;
 use Keycloak\JsonDeserializable;
+use RuntimeException;
 
 /**
  * Class CompositeRole
@@ -59,7 +60,7 @@ class CompositeRole implements JsonSerializable, JsonDeserializable
      * @param string|null $description
      * @param bool $isComposite
      * @param bool $isClientRole
-     * @param string|null $clientId
+     * @param string $clientId
      * @param array|null $permissions
      */
     public function __construct(
@@ -91,10 +92,14 @@ class CompositeRole implements JsonSerializable, JsonDeserializable
     /**
      * @param string|array $json
      * @return CompositeRole Should always return an instance of the class that implements this interface.
+     * @throws RuntimeException
      */
     public static function fromJson($json): CompositeRole
     {
         $arr = is_array($json) ? $json : json_decode($json, true);
+        if ($arr === null) {
+            throw new RuntimeException('Something went wrong during json serialization.');
+        }
         return new self(
             $arr['id'],
             $arr['name'],
