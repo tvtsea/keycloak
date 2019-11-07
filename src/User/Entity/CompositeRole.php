@@ -36,12 +36,12 @@ class CompositeRole implements JsonSerializable, JsonDeserializable
     /**
      * @var bool
      */
-    public $isComposite;
+    public $composite;
 
     /**
      * @var bool
      */
-    public $isClientRole;
+    public $clientRole;
 
     /**
      * @var string
@@ -58,8 +58,8 @@ class CompositeRole implements JsonSerializable, JsonDeserializable
      * @param string $id
      * @param string $name
      * @param string|null $description
-     * @param bool $isComposite
-     * @param bool $isClientRole
+     * @param bool $composite
+     * @param bool $clientRole
      * @param string $clientId
      * @param array|null $permissions
      */
@@ -67,17 +67,17 @@ class CompositeRole implements JsonSerializable, JsonDeserializable
         string $id,
         string $name,
         ?string $description,
-        bool $isComposite,
-        bool $isClientRole,
+        bool $composite,
+        bool $clientRole,
         string $clientId,
         ?array $permissions
     ) {
         $this->id = $id;
         $this->name = $name;
         $this->description = $description;
-        $this->isClientRole = $isClientRole;
+        $this->clientRole = $clientRole;
         $this->clientId = $clientId;
-        $this->isComposite = $isComposite;
+        $this->composite = $composite;
         $this->permissions = $permissions;
     }
 
