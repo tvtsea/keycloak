@@ -3,6 +3,8 @@
 use Keycloak\Client\Api as ClientApi;
 use Keycloak\Client\Entity\Client;
 use Keycloak\Exception\KeycloakException;
+use Keycloak\User\Entity\CompositeRole;
+use Keycloak\User\Entity\Role;
 use PHPUnit\Framework\TestCase;
 
 require_once 'TestClient.php';
@@ -55,5 +57,26 @@ class ClientTest extends TestCase
     {
         $client = $this->clientApi->findByClientId('realm-management');
         $this->assertNotEmpty($client->protocolMappers);
+    }
+
+    public function testGetCompositeRoles(): void
+    {
+        $compositeRoles = $this->clientApi->getCompositeRoles('07e9ea75-b6f0-40b7-9bd3-b2d591b37e47');
+        $this->assertNotEmpty($compositeRoles);
+        $this->assertInstanceOf(Role::class, $compositeRoles[0]);
+    }
+
+    public function testGetCompositeRolesWithPermissions(): void
+    {
+        $compositeRoles = $this->clientApi->getCompositeRolesWithPermissions('07e9ea75-b6f0-40b7-9bd3-b2d591b37e47');
+        $this->assertNotEmpty($compositeRoles);
+        $this->assertInstanceOf(CompositeRole::class, $compositeRoles[0]);
+    }
+
+    public function testGetCompositesFromRole(): void
+    {
+        $compositeRoles = $this->clientApi->getCompositesFromRole('07e9ea75-b6f0-40b7-9bd3-b2d591b37e47', 'manage-account');
+        $this->assertNotEmpty($compositeRoles);
+        $this->assertInstanceOf(Role::class, $compositeRoles[0]);
     }
 }
