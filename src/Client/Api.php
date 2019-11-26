@@ -78,15 +78,15 @@ class Api
 
     /**
      * @return Role
-     * @param string $roleName
+     * @param Role $role
      * @param string $clientId
      * @throws KeycloakException
      */
-    public function tryFindRole(string $roleName, string $clientId): ?Role
+    public function getRole(Role $role, string $clientId): ?Role
     {
         try {
             return Role::fromJson($this->client
-                ->sendRequest('GET', "clients/$clientId/roles/" . $roleName)
+                ->sendRequest('GET', "clients/$clientId/roles/{$role->name}")
                 ->getBody()
                 ->getContents());
         } catch (KeycloakException $ex) {
@@ -94,7 +94,6 @@ class Api
                 throw $ex;
             }
         }
-
         return null;
     }
 
@@ -117,22 +116,6 @@ class Api
     }
 
     /**
-     * @return Role
-     * @param Role $role
-     * @param string $clientId
-     * @throws KeycloakException
-     */
-    public function getRole(Role $role, string $clientId): Role
-    {
-        $json = $this->client
-            ->sendRequest('GET', "clients/$clientId/roles/" . $role->name)
-            ->getBody()
-            ->getContents();
-
-        return Role::fromJson($json);
-    }
-
-    /**
      * @param Role $role
      * @param string $clientId
      * @return string id of newly created role
@@ -140,7 +123,7 @@ class Api
      */
     public function createRole(Role $role, string $clientId): string
     {
-        $res = $this->client->sendRequest('POST', 'clients/' . $clientId . '/roles', $role);
+        $res = $this->client->sendRequest('POST', "clients/$clientId/roles", $role);
 
         if ($res->getStatusCode() === 201) {
             return $this->extractRIDFromCreateResponse($res);
@@ -163,19 +146,18 @@ class Api
     {
         $oldName = $role->name;
         $role->name = $newName;
-        $this->client->sendRequest('PUT', 'clients/' . $clientId . '/roles/' . $oldName, $role);
+        $this->client->sendRequest('PUT', "clients/$clientId/roles/$oldName", $role);
     }
 
     /**
      * @param string $roleName
      * @param string $clientId
      * @param array $permissions
-     * @return array
      * @throws KeycloakException
      */
     public function addPermissions(string $roleName, string $clientId, ?array $permissions): void
     {
-        $this->client->sendRequest('POST', 'clients/' . $clientId . '/roles/' . $roleName. '/composites', $permissions);
+        $this->client->sendRequest('POST', "clients/$clientId/roles/$roleName/composites", $permissions);
     }
 
     /**
@@ -185,7 +167,7 @@ class Api
      */
     public function deleteRole(string $roleName, string $clientId): void
     {
-        $this->client->sendRequest('DELETE', 'clients/' . $clientId . '/roles/' . $roleName);
+        $this->client->sendRequest('DELETE', "clients/$clientId/roles/" . $roleName);
     }
 
     /**

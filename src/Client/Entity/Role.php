@@ -5,6 +5,10 @@ namespace Keycloak\Client\Entity;
 use JsonSerializable;
 use Keycloak\JsonDeserializable;
 
+/**
+ * Class Role
+ * @package Keycloak\Client\Entity
+ */
 class Role implements JsonSerializable, JsonDeserializable
 {
     /**
@@ -31,8 +35,6 @@ class Role implements JsonSerializable, JsonDeserializable
      * @var bool
      */
     public $clientRole;
-
-
 
     /**
      * Role constructor.
@@ -70,7 +72,9 @@ class Role implements JsonSerializable, JsonDeserializable
      */
     public static function fromJson($json): Role
     {
-        $arr = is_array($json) ? $json : json_decode($json, true);
+        $arr = is_array($json)
+            ? $json
+            : json_decode($json, true);
         return new self(
             $arr['id'],
             $arr['name'],
