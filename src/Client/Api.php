@@ -85,6 +85,10 @@ class Api
     public function findUsersByRoleName(string $clientId, string $roleName): array
     {
         $client = $this->findByClientId($clientId);
+        if ($client === null) {
+            return [];
+        }
+        
         $users = $this->client
             ->sendRequest('GET', "clients/$client->id/roles/$roleName/users")
             ->getBody()
