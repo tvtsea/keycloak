@@ -221,6 +221,20 @@ class Api
     /**
      * @param string $id
      * @param string $clientId
+     * @param array $roleToAdd
+     */
+    public function addClientRolesWithMinimalInfo(string $id, string $clientId, array $roleToAdd): void
+    {
+        $this->client
+            ->sendRequest(
+                'POST',
+                "users/$id/role-mappings/clients/$clientId",
+                [$roleToAdd]);
+    }
+
+    /**
+     * @param string $id
+     * @param string $clientId
      * @param Role[] $rolesToDelete
      * @throws KeycloakException
      */
