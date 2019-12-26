@@ -221,6 +221,20 @@ class Api
     /**
      * @param string $id
      * @param string $clientId
+     * @param array $roleToAdd
+     */
+    public function addClientRolesWithMinimalInfo(string $id, string $clientId, array $roleToAdd): void
+    {
+        $this->client
+            ->sendRequest(
+                'POST',
+                "users/$id/role-mappings/clients/$clientId",
+                [$roleToAdd]);
+    }
+
+    /**
+     * @param string $id
+     * @param string $clientId
      * @param Role[] $rolesToDelete
      * @throws KeycloakException
      */
@@ -231,5 +245,35 @@ class Api
                 'DELETE',
                 "users/$id/role-mappings/clients/$clientId",
                 array_map([RoleTransformer::class, 'toMinimalIdentifiableRole'], $rolesToDelete));
+    }
+
+    /**
+     * @param string $id
+     * @param array $body
+     */
+    public function sendRequiredActionsEmail(string $id, array $body): void
+    {
+        $this->client
+            ->sendRequest(
+                'PUT',
+                "users/$id/execute-actions-email",
+                $body
+            );
+    }
+
+    /**
+     * @return array
+     */
+    public function getRequiredActions(): array
+    {
+        $requiredActionsJson = $this->client
+            ->sendRequest('GET', "authentication/required-actions")
+            ->getBody()
+            ->getContents();
+
+        $requiredActionsArr = json_decode($requiredActionsJson, true);
+        return array_map(static function ($action) {
+            return $action['alias'];
+        }, $requiredActionsArr);
     }
 }

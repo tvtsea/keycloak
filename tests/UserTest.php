@@ -202,6 +202,37 @@ final class UserTest extends TestCase
         $availableRolesAfterAdd = $this->userApi->getAvailableClientRoles($user->id, $client->id);
         $this->assertLessThan(count($availableRoles), count($availableRolesAfterAdd));
     }
+    
+    public function testAddClientRoleWithMinimalInfo(): void 
+    {
+        $user = $this->getUser();
+        $client = $this->clientApi->findByClientId('realm-management');
+
+        $availableRoles = $this->userApi->getAvailableClientRoles($user->id, $client->id);
+        $viewClientsRole = null;
+        foreach ($availableRoles as $role) {
+            if ($role->name === 'view-users') {
+                $viewClientsRole = ['id' => $role->id, 'name' => $role->name];
+            }
+        }
+
+        $rolesBeforeAdd = $this->userApi->getRoles($user->id);
+        $this->userApi->addClientRolesWithMinimalInfo($user->id, $client->id, $viewClientsRole);
+
+        $rolesAfterAdd = $this->userApi->getRoles($user->id);
+        $this->assertGreaterThan(count($rolesBeforeAdd), count($rolesAfterAdd));
+
+        $added = false;
+        foreach ($rolesAfterAdd as $role) {
+            if ($role->id === $viewClientsRole['id']) {
+                $added = true;
+            }
+        }
+        $this->assertTrue($added);
+
+        $availableRolesAfterAdd = $this->userApi->getAvailableClientRoles($user->id, $client->id);
+        $this->assertLessThan(count($availableRoles), count($availableRolesAfterAdd));
+    }
 
     public function testDeleteClientRoles(): void
     {
@@ -211,6 +242,21 @@ final class UserTest extends TestCase
 
         $this->userApi->deleteClientRoles($user->id, $client->id, $roles);
         $this->assertEmpty($this->userApi->getClientRoles($user->id, $client->id));
+    }
+
+
+    // TODO: uncomment when keycloak SMTP settings are configured
+//    public function testSendRequiredActionsEmail(): void
+//    {
+//        $this->expectNotToPerformAssertions();
+//        $user = $this->getUser();
+//        $this->userApi->sendRequiredActionsEmail($user->id, ['UPDATE_PASSWORD']);
+//    }
+
+    public function testGetRequiredActions(): void
+    {
+        $requiredActions = $this->userApi->getRequiredActions();
+        $this->assertIsArray($requiredActions);
     }
 
     public function testDelete(): void
