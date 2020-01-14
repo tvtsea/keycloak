@@ -244,14 +244,12 @@ final class UserTest extends TestCase
         $this->assertEmpty($this->userApi->getClientRoles($user->id, $client->id));
     }
 
-
-    // TODO: uncomment when keycloak SMTP settings are configured
-//    public function testSendRequiredActionsEmail(): void
-//    {
-//        $this->expectNotToPerformAssertions();
-//        $user = $this->getUser();
-//        $this->userApi->sendRequiredActionsEmail($user->id, ['UPDATE_PASSWORD']);
-//    }
+    public function testSendRequiredActionsEmail(): void
+    {
+        $this->expectNotToPerformAssertions();
+        $user = $this->getUser();
+        $this->userApi->sendRequiredActionsEmail($user->id, ['UPDATE_PASSWORD']);
+    }
 
     public function testGetRequiredActions(): void
     {
