@@ -262,6 +262,18 @@ class Api
     }
 
     /**
+     * @param string $id
+     */
+    public function sendVerifyEmail(string $id): void
+    {
+        $this->client
+            ->sendRequest(
+                'PUT',
+                "users/$id/send-verify-email"
+            );
+    }
+
+    /**
      * @return array
      */
     public function getRequiredActions(): array
