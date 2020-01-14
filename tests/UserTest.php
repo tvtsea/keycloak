@@ -251,6 +251,13 @@ final class UserTest extends TestCase
         $this->userApi->sendRequiredActionsEmail($user->id, ['UPDATE_PASSWORD']);
     }
 
+    public function testsSendVerifyEmail(): void
+    {
+        $this->expectNotToPerformAssertions();
+        $user = $this->getUser();
+        $this->userApi->sendVerifyEmail($user->id);
+    }
+
     public function testGetRequiredActions(): void
     {
         $requiredActions = $this->userApi->getRequiredActions();
