@@ -186,6 +186,15 @@ class Api
 
     /**
      * @param string $clientId
+     * @param array $permissions
+     */
+    public function deletePermissions(string $clientId, array $permissions): void
+    {
+        $this->client->sendRequest('DELETE', "roles-by-id/$clientId/composites", array_values($permissions));
+    }
+
+    /**
+     * @param string $clientId
      * @param string $roleName
      * @throws KeycloakException
      */
