@@ -163,14 +163,10 @@ class Api
     /**
      * @param Role $role
      * @param string $clientId
-     * @param string $newName
-     * @throws KeycloakException
      */
-    public function updateRole(Role $role, string $clientId, string $newName): void
+    public function updateRole(Role $role, string $clientId): void
     {
-        $oldName = $role->name;
-        $role->name = $newName;
-        $this->client->sendRequest('PUT', "clients/$clientId/roles/$oldName", $role);
+        $this->client->sendRequest('PUT', "clients/$clientId/roles/$role->name;", $role);
     }
 
     /**
